@@ -1,0 +1,129 @@
+#include <iostream>
+#include <vector>
+#include <chrono> // For time measurement
+
+// Insertion Sort for very small subarrays
+void insertionSort(std::vector<int>& arr, int left, int right) {
+    for (int i = left + 1; i <= right; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= left && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+}
+
+// Partition for Quick Sort
+int partition(std::vector<int>& arr, int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+    for (int j = low; j < high; j++) {
+        if (arr[j] <= pivot) {
+            i++;
+            std::swap(arr[i], arr[j]);
+        }
+    }
+    std::swap(arr[i + 1], arr[high]);
+    return i + 1;
+}
+
+// Quick Sort with Insertion Sort for small arrays
+void quickSort(std::vector<int>& arr, int low, int high) {
+    if (low < high) {
+        if (high - low + 1 < 20) { // Threshold for very small subarrays
+            insertionSort(arr, low, high);
+        }
+        else {
+            int pi = partition(arr, low, high);
+            quickSort(arr, low, pi - 1);
+            quickSort(arr, pi + 1, high);
+        }
+    }
+}
+
+// Merge function for Merge Sort
+void merge(std::vector<int>& arr, int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    std::vector<int> leftArr(n1);
+    std::vector<int> rightArr(n2);
+
+    for (int i = 0; i < n1; i++)
+        leftArr[i] = arr[left + i];
+    for (int j = 0; j < n2; j++)
+        rightArr[j] = arr[mid + 1 + j];
+
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (leftArr[i] <= rightArr[j]) {
+            arr[k] = leftArr[i];
+            i++;
+        }
+        else {
+            arr[k] = rightArr[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i < n1) {
+        arr[k] = leftArr[i];
+        i++;
+        k++;
+    }
+    while (j < n2) {
+        arr[k] = rightArr[j];
+        j++;
+        k++;
+    }
+}
+
+// Merge Sort function
+void mergeSort(std::vector<int>& arr, int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        mergeSort(arr, left, mid);
+        mergeSort(arr, mid + 1, right);
+        merge(arr, left, mid, right);
+    }
+}
+
+// Hybrid Sort: Switches between Merge Sort, Quick Sort, and Insertion Sort
+void hybridSort(std::vector<int>& arr) {
+    if (arr.size() < 50) {
+        // For small arrays, use Quick Sort with Insertion Sort for very small partitions
+        quickSort(arr, 0, arr.size() - 1);
+    }
+    else {
+        // For larger arrays, use Merge Sort for reliable O(n log n) complexity
+        mergeSort(arr, 0, arr.size() - 1);
+    }
+}
+
+int main() {
+    std::vector<int> arr = { 34, 100, 20 , 99, 12, 80, 55, 95, 12 };
+
+    std::cout << "Original array: ";
+    for (int num : arr)
+        std::cout << num << " ";
+    std::cout << std::endl;
+
+    // Measure the time taken by hybridSort
+    auto start = std::chrono::high_resolution_clock::now();
+    hybridSort(arr);
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // Calculate the duration in microseconds
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Time taken by hybridSort: " << duration.count() << " microseconds" << std::endl;
+
+    std::cout << "Sorted array: ";
+    for (int num : arr)
+        std::cout << num << " ";
+    std::cout << std::endl;
+
+    return 0;
+}
