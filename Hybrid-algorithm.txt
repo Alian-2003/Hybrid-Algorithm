@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <chrono> // For time measurement
+#include <algorithm> // For reverse and shuffle
+#include <random> // For random shuffle
 
 // Insertion Sort for very small subarrays
 void insertionSort(std::vector<int>& arr, int left, int right) {
@@ -34,8 +36,7 @@ void quickSort(std::vector<int>& arr, int low, int high) {
     if (low < high) {
         if (high - low + 1 < 20) { // Threshold for very small subarrays
             insertionSort(arr, low, high);
-        }
-        else {
+        } else {
             int pi = partition(arr, low, high);
             quickSort(arr, low, pi - 1);
             quickSort(arr, pi + 1, high);
@@ -61,8 +62,7 @@ void merge(std::vector<int>& arr, int left, int mid, int right) {
         if (leftArr[i] <= rightArr[j]) {
             arr[k] = leftArr[i];
             i++;
-        }
-        else {
+        } else {
             arr[k] = rightArr[j];
             j++;
         }
@@ -96,34 +96,44 @@ void hybridSort(std::vector<int>& arr) {
     if (arr.size() < 50) {
         // For small arrays, use Quick Sort with Insertion Sort for very small partitions
         quickSort(arr, 0, arr.size() - 1);
-    }
-    else {
+    } else {
         // For larger arrays, use Merge Sort for reliable O(n log n) complexity
         mergeSort(arr, 0, arr.size() - 1);
     }
 }
 
-int main() {
-    std::vector<int> arr = { 34, 100, 20 , 99, 12, 80, 55, 95, 12 };
+void measureTime(const std::vector<int>& arr, const std::string& caseType) {
+    std::vector<int> arrCopy = arr; // Copy the array to avoid modifying the original
 
-    std::cout << "Original array: ";
-    for (int num : arr)
-        std::cout << num << " ";
-    std::cout << std::endl;
-
-    // Measure the time taken by hybridSort
     auto start = std::chrono::high_resolution_clock::now();
-    hybridSort(arr);
+    hybridSort(arrCopy);
     auto end = std::chrono::high_resolution_clock::now();
 
     // Calculate the duration in microseconds
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time taken by hybridSort: " << duration.count() << " microseconds" << std::endl;
+    std::cout << "Time taken by hybridSort for " << caseType << " case: " << duration.count() << " microseconds" << std::endl;
+}
 
-    std::cout << "Sorted array: ";
-    for (int num : arr)
-        std::cout << num << " ";
-    std::cout << std::endl;
+int main() {
+    // Define array size and populate with sample data
+    int n = 100; // Array size for testing
+    std::vector<int> arr(n);
+    for (int i = 0; i < n; i++) {
+        arr[i] = i + 1; // Best case: already sorted
+    }
+
+    // Best Case (Already Sorted)
+    measureTime(arr, "Best");
+
+    // Average Case (Random order)
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(arr.begin(), arr.end(), g); // Shuffle to create average case
+    measureTime(arr, "Average");
+
+    // Worst Case (Reverse Sorted)
+    std::sort(arr.rbegin(), arr.rend()); // Sort in descending order for worst case
+    measureTime(arr, "Worst");
 
     return 0;
 }
